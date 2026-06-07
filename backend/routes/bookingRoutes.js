@@ -1,9 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const authMiddleware = require(
-  "../middleware/authMiddleware"
-);
+const authMiddleware = require("../middleware/authMiddleware");
 
 const {
   createBooking,
@@ -12,44 +10,22 @@ const {
   cancelBooking,
   rateBooking,
   getMyBookings,
-} = require(
-  "../controllers/bookingController"
-);
+  getBarberBookings, // 👈 1. Import the new controller method
+} = require("../controllers/bookingController");
 
-router.post(
-  "/",
-  authMiddleware,
-  createBooking
-);
-
+// 🔴 2. ADD THIS ENDPOINT RIGHT HERE:
+// This listens for requests at: /api/bookings/slots/:barberId (assuming your base is /api/bookings)
 router.get(
-  "/barber",
+  "/slots/:barberId",
   authMiddleware,
-  getBookings
+  getBarberBookings
 );
 
-router.get(
-  "/my-bookings",
-  authMiddleware,
-  getMyBookings
-);
-
-router.patch(
-  "/complete/:id",
-  authMiddleware,
-  completeBooking
-);
-
-router.patch(
-  "/cancel/:id",
-  authMiddleware,
-  cancelBooking
-);
-
-router.patch(
-  "/rate/:id",
-  authMiddleware,
-  rateBooking
-);
+router.post("/", authMiddleware, createBooking);
+router.get("/barber", authMiddleware, getBookings);
+router.get("/my-bookings", authMiddleware, getMyBookings);
+router.patch("/complete/:id", authMiddleware, completeBooking);
+router.patch("/cancel/:id", authMiddleware, cancelBooking);
+router.patch("/rate/:id", authMiddleware, rateBooking);
 
 module.exports = router;

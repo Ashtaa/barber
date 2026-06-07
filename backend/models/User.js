@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const UserSchema = new mongoose.Schema({
   shopName: {
     type: String,
-default: "",
+    default: "",
   },
 
   email: {
@@ -22,16 +22,20 @@ default: "",
     default: [],
   },
 
-  workingHours: {
-    open: {
-      type: String,
-      default: "08:00",
-    },
+  // 🔴 FIXED: Converted from a single object to a structured array of daily schedules
+  workingHours: [
+    {
+      day: { type: String, required: true },     // e.g., "Monday"
+      open: { type: String, default: "08:00" },  // e.g., "08:00" (24h format)
+      close: { type: String, default: "20:00" }, // e.g., "20:00" (24h format)
+      isOpen: { type: Boolean, default: true }   // Master toggle per individual day
+    }
+  ],
 
-    close: {
-      type: String,
-      default: "20:00",
-    },
+  // 🔴 ADDED: Emergency Pause property for instant shop closure mechanics
+  isPaused: {
+    type: Boolean,
+    default: false,
   },
 
   services: [
@@ -57,7 +61,4 @@ default: "",
   timestamps: true,
 });
 
-module.exports = mongoose.model(
-  "User",
-  UserSchema
-);
+module.exports = mongoose.model("User", UserSchema);

@@ -2,6 +2,22 @@ const Booking = require("../models/Booking");
 
 exports.createBooking = async (req, res) => {
   try {
+    // 🚨 FIX: Extract raw date string sequence cleanly without letting JS adjust timezone offsets
+    const incomingDate = req.body.bookingDate; // e.g. "Sun Jun 07 2026..."
+    let formattedDateString = "";
+
+    if (incomingDate instanceof Date || !isNaN(Date.parse(incomingDate))) {
+      const d = new Date(incomingDate);
+      // Use local getter methods to preserve local client calendar selections
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      formattedDateString = `${year}-${month}-${day}`;
+    } else {
+      // Fallback fallback parsing wrapper string sequence
+      formattedDateString = String(incomingDate).split("T")[0];
+    }
+
     const booking = await Booking.create({
       barber: req.body.barber,
       customer: req.user.id,
@@ -9,14 +25,13 @@ exports.createBooking = async (req, res) => {
       service: req.body.service,
       servicePrice: req.body.servicePrice || 0,
       serviceDuration: req.body.serviceDuration || 30,
-      bookingDate: req.body.bookingDate,
+      bookingDate: formattedDateString, // Saves exactly as "2026-06-07"
+      bookingTime: String(req.body.bookingTime).trim(), // Stores exactly as "08:30 AM"
     });
 
     res.status(201).json(booking);
   } catch (error) {
-    res.status(500).json({
-      message: error.message,
-    });
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -136,6 +151,24 @@ exports.getMyBookings = async (req, res) => {
     })
       .populate("barber")
       .sort({ createdAt: -1 });
+
+    res.json(bookings);
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+// 🔴 ADD THIS TO THE BOTTOM OF YOUR CONTROLLER FILE:
+exports.getBarberBookings = async (req, res) => {
+  try {
+    const { barberId } = req.params;
+
+    // Find all active bookings for this specific barber that aren't cancelled
+    const bookings = await Booking.find({
+      barber: barberId,
+      status: { $ne: "cancelled" }
+    }).select("bookingDate bookingTime status"); // Only pull fields the frontend needs
 
     res.json(bookings);
   } catch (error) {
