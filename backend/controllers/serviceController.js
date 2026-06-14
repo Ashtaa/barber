@@ -21,17 +21,19 @@ exports.addService = async (
     });
   }
 };
-
-exports.getServices = async (
-  req,
-  res
-) => {
+exports.getServices = async (req, res) => {
   try {
-    const services =
-      await Service.find({
-        barber: req.user.id,
-      });
+    let filter = {};
 
+    // 1. If a customer passes ?barber=ID in the URL, filter by that specific barber
+    if (req.query.barber) {
+      filter.barber = req.query.barber;
+    } else {
+      // 2. Fallback for the Barber App managing their own catalog items
+      filter.barber = req.user.id;
+    }
+
+    const services = await Service.find(filter);
     res.json(services);
   } catch (error) {
     res.status(500).json({

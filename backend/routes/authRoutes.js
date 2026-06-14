@@ -2,14 +2,21 @@ const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../middleware/authMiddleware");
 
-// Destructure controllers from updated file
-const { signup, login, getFavoritesList, toggleFavorite } = require("../controllers/authController");
+// 1. Ensure getProfile is imported from your controller!
+const { 
+  signup, 
+  login, 
+  getFavoritesList, 
+  toggleFavorite, 
+  getProfile 
+} = require("../controllers/authController");
 
 router.post("/signup", signup);
 router.post("/login", login);
-
-// ✅ Add these matching hooks to destroy the 404 handler drops
 router.get("/favorites-list", authMiddleware, getFavoritesList);
 router.post("/favorite/:shopId", authMiddleware, toggleFavorite);
+
+// 2. 🚨 ADD THIS LINE BELOW IF IT IS MISSING:
+router.get("/profile", authMiddleware, getProfile);
 
 module.exports = router;

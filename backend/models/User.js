@@ -1,15 +1,26 @@
 const mongoose = require("mongoose");
 
 const UserSchema = new mongoose.Schema({
-  shopName: {
+  name: {
     type: String,
-    default: "",
+    required: true,
+    trim: true,
   },
 
-  email: {
+  // 🌟 Added Phone Number as the primary, unique identification anchor
+  phoneNumber: {
     type: String,
     required: true,
     unique: true,
+    trim: true,
+  },
+
+  // 🌟 Made optional so clients don't get blocked if they sign up with phone only
+  email: {
+    type: String,
+    sparse: true, // Allows multiple null/empty values without throwing duplicate key errors
+    trim: true,
+    lowercase: true,
   },
 
   password: {
@@ -17,46 +28,36 @@ const UserSchema = new mongoose.Schema({
     required: true,
   },
 
-  images: {
-    type: [String],
-    default: [],
-  },
-
-  // 🔴 FIXED: Converted from a single object to a structured array of daily schedules
-  workingHours: [
+  // 🌟 Keeps track of the user's bookmarked shop IDs
+  favorites: [
     {
-      day: { type: String, required: true },     // e.g., "Monday"
-      open: { type: String, default: "08:00" },  // e.g., "08:00" (24h format)
-      close: { type: String, default: "20:00" }, // e.g., "20:00" (24h format)
-      isOpen: { type: Boolean, default: true }   // Master toggle per individual day
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User" // Assuming your barbers also live in this collection or a separate "Barber" one
     }
   ],
 
-  // 🔴 ADDED: Emergency Pause property for instant shop closure mechanics
-  isPaused: {
-    type: Boolean,
-    default: false,
-  },
-
-  services: [
-    {
-      nameEN: String,
-      nameAM: String,
-      price: Number,
-      duration: Number,
-    },
-  ],
-
-  ratingPercentage: {
-    type: Number,
-    default: 100,
-  },
-
+  // 🌟 Default role is now client "user" instead of "barber"
   role: {
     type: String,
     enum: ["barber", "user", "admin"],
-    default: "barber",
+    default: "user",
   },
+  
+  // Backwards compatibility fallback if you mix shops and users in one collection
+  images: { type: [String], default: [] },
+  workingHours: [
+    {
+      day: { type: String },
+      open: { type: String, default: "08:00" },
+      close: { type: String, default: "20:00" },
+      isOpen: { type: Boolean, default: true }
+    }
+  ],
+  isPaused: { type: Boolean, default: false },
+  services: [
+    { nameEN: String, nameAM: String, price: Number, duration: Number }
+  ],
+  ratingPercentage: { type: Number, default: 100 }
 }, {
   timestamps: true,
 });
